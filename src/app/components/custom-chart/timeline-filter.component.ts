@@ -1,78 +1,34 @@
-import { Component, Input, Output, EventEmitter, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
-import { scaleLinear, scaleTime, scaleBand } from 'd3-scale';
-import { brushX } from 'd3-brush';
-import { select, event as d3event } from 'd3-selection';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ViewEncapsulation,
+  ChangeDetectionStrategy
+} from "@angular/core";
+import { scaleLinear, scaleTime, scaleBand } from "d3-scale";
+import { brushX } from "d3-brush";
+import { select, event } from "d3-selection";
+
 import {
   BaseChartComponent,
   ColorHelper,
   ViewDimensions,
   calculateViewDimensions,
   id
-} from 'projects/swimlane/ngx-charts/src/public-api';
+} from "@swimlane/ngx-charts";
 
 @Component({
   // tslint:disable-next-line: component-selector
-  selector: 'ngx-charts-timeline-filter-bar-chart',
-  template: `
-    <ngx-charts-chart
-      [view]="[width, height]"
-      [showLegend]="false"
-      [animations]="animations"
-      class="timeline-filter-bar-chart"
-    >
-      <svg:g [attr.transform]="transform" class="chart">
-        <svg:g
-          ngx-charts-x-axis
-          *ngIf="xAxis"
-          [xScale]="timeScale"
-          [dims]="dims"
-          [showLabel]="showXAxisLabel"
-          [labelText]="xAxisLabel"
-          (dimensionsChanged)="updateXAxisHeight($event)"
-        ></svg:g>
-        <svg:g
-          ngx-charts-y-axis
-          *ngIf="yAxis"
-          [yScale]="yScale"
-          [dims]="dims"
-          [showGridLines]="showGridLines"
-          [showLabel]="showYAxisLabel"
-          [labelText]="yAxisLabel"
-          (dimensionsChanged)="updateYAxisWidth($event)"
-        ></svg:g>
-        <svg:g
-          ngx-charts-series-vertical
-          [xScale]="xScale"
-          [yScale]="yScale"
-          [colors]="colors"
-          [series]="results"
-          [dims]="dims"
-          [gradient]="gradient"
-          [animations]="animations"
-          [noBarWhenZero]="noBarWhenZero"
-          tooltipDisabled="true"
-        ></svg:g>
-      </svg:g>
-      <svg:g [attr.transform]="transform" class="timeline">
-        <svg:filter [attr.id]="filterId">
-          <svg:feColorMatrix
-            in="SourceGraphic"
-            type="matrix"
-            values="0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0"
-          />
-        </svg:filter>
-        <svg:rect x="0" [attr.width]="dims.width" y="0" [attr.height]="dims.height" class="brush-background" />
-        <svg:g class="brush"></svg:g>
-      </svg:g>
-    </ngx-charts-chart>
-  `,
-  styleUrls: ['../../../../projects/swimlane/ngx-charts/src/lib/common/base-chart.component.scss'],
+  selector: "ngx-charts-timeline-filter-bar-chart",
+  templateUrl: "./timeline-filter.component.html",
+  styleUrls: ["./timeline-filter.component.scss"],
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TimelineFilterBarChartComponent extends BaseChartComponent {
   @Input() autoScale = false;
-  @Input() schemeType: string = 'ordinal';
+  @Input() schemeType: string = "ordinal";
   @Input() valueDomain: number[];
   @Input() xAxis;
   @Input() yAxis;
@@ -109,8 +65,8 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
   update(): void {
     super.update();
     this.dims = calculateViewDimensions({
-      width: this.width,
-      height: this.height,
+      width: 800,
+      height: 600,
       margins: this.margin,
       showXAxis: this.xAxis,
       showYAxis: this.yAxis,
@@ -136,7 +92,7 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
       this.updateBrush();
     }
 
-    this.filterId = 'filter' + id().toString();
+    this.filterId = "filter" + id().toString();
     this.filter = `url(#${this.filterId})`;
 
     if (!this.initialized) {
@@ -206,21 +162,28 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
   }
 
   getXScale(domain, width): any {
-    return scaleBand().range([0, width]).paddingInner(0.1).domain(domain);
+    return scaleBand()
+      .range([0, width])
+      .paddingInner(0.1)
+      .domain(domain);
   }
 
   getTimeScale(domain, width): any {
-    return scaleTime().range([0, width]).domain(domain);
+    return scaleTime()
+      .range([0, width])
+      .domain(domain);
   }
 
   getYScale(domain, height): any {
-    const scale = scaleLinear().range([height, 0]).domain(domain);
+    const scale = scaleLinear()
+      .range([height, 0])
+      .domain(domain);
 
     return scale;
   }
 
   getScaleType(values): string {
-    return 'time';
+    return "time";
   }
 
   trackBy(index, item): string {
@@ -229,13 +192,18 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
 
   setColors(): void {
     let domain;
-    if (this.schemeType === 'ordinal') {
+    if (this.schemeType === "ordinal") {
       domain = this.xSet;
     } else {
       domain = this.yDomain;
     }
 
-    this.colors = new ColorHelper(this.scheme, this.schemeType, domain, this.customColors);
+    this.colors = new ColorHelper(
+      this.scheme,
+      this.schemeType,
+      domain,
+      this.customColors
+    );
   }
 
   updateYAxisWidth({ width }): void {
@@ -255,19 +223,18 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
     const width = this.width;
 
     this.brush = brushX()
-      .extent([
-        [0, 0],
-        [width, height]
-      ])
-      .on('brush end', () => {
-        const selection = d3event.selection || this.xScale.range();
+      .extent([[0, 0], [width, height]])
+      .on("brush end", () => {
+        const selection = event.selection || this.xScale.range();
         const newDomain = selection.map(this.timeScale.invert);
 
         this.onFilter.emit(newDomain);
         this.cd.markForCheck();
       });
 
-    select(this.chartElement.nativeElement).select('.brush').call(this.brush);
+    select(this.chartElement.nativeElement)
+      .select(".brush")
+      .call(this.brush);
   }
 
   updateBrush(): void {
@@ -276,18 +243,17 @@ export class TimelineFilterBarChartComponent extends BaseChartComponent {
     const height = this.dims.height;
     const width = this.dims.width;
 
-    this.brush.extent([
-      [0, 0],
-      [width, height]
-    ]);
-    select(this.chartElement.nativeElement).select('.brush').call(this.brush);
+    this.brush.extent([[0, 0], [width, height]]);
+    select(this.chartElement.nativeElement)
+      .select(".brush")
+      .call(this.brush);
 
     // clear hardcoded properties so they can be defined by CSS
     select(this.chartElement.nativeElement)
-      .select('.selection')
-      .attr('fill', undefined)
-      .attr('stroke', undefined)
-      .attr('fill-opacity', undefined);
+      .select(".selection")
+      .attr("fill", undefined)
+      .attr("stroke", undefined)
+      .attr("fill-opacity", undefined);
 
     this.cd.markForCheck();
   }
